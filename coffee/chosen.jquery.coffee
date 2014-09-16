@@ -40,12 +40,18 @@ class Chosen extends AbstractChosen
 
     @container = ($ "<div />", container_props)
 
-    results_id = @form_field.id + '-results'
+    # Create ids for the input field, the dropdown list, and choice
+    input_id = @form_field.id + '-chosen-input'
+    results_id = @form_field.id + '-chosen-results'
+    single_id = @form_field.id + '-chosen-single'
+
+    # Transfer the aria-labelledby from the <select> to the generated <input>
     labelledby = @form_field_jq.attr('aria-labelledby')
+
     if @is_multiple
-      @container.html '<ul class="chosen-choices"><li class="search-field"><input type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + '" aria-labelledby="' + labelledby + '"/></li></ul><div class="chosen-drop"><ul id="' + results_id + 'class="chosen-results"></ul></div>'
+      @container.html '<ul class="chosen-choices"><li class="search-field"><input id="' + input_id + '" type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + '" aria-labelledby="' + labelledby + '"/></li></ul><div class="chosen-drop"><ul id="' + results_id + '" class="chosen-results"></ul></div>'
     else
-      @container.html '<a class="chosen-single chosen-default" tabindex="-1"><span>' + @default_text + '</span><div><b></b></div></a><div class="chosen-drop"><div class="chosen-search"><input type="text" autocomplete="off" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + '" aria-labelledby="' + labelledby + '" /></div><ul id="' + results_id + '" class="chosen-results"></ul></div>'
+      @container.html '<a id="' + single_id + '" class="chosen-single chosen-default" tabindex="-1"><span>' + @default_text + '</span><div><b></b></div></a><div class="chosen-drop"><div class="chosen-search"><input id="' + input_id + '" type="text" autocomplete="off" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + '" aria-labelledby="' + labelledby + '" /></div><ul id="' + results_id + '" class="chosen-results"></ul></div>'
 
     @form_field_jq.hide().after @container
     @dropdown = @container.find('div.chosen-drop').first()
@@ -212,7 +218,6 @@ class Chosen extends AbstractChosen
       @result_highlight = el
       @result_highlight.addClass "highlighted"
 
-      # TODO: set aria-activedescendant in input box to element's id
       @search_field.attr('aria-activedescendant', el.attr('id'))
 
       maxHeight = parseInt @search_results.css("maxHeight"), 10
@@ -238,6 +243,8 @@ class Chosen extends AbstractChosen
       @form_field_jq.trigger("chosen:maxselected", {chosen: this})
       return false
 
+    @search_field.attr("aria-expanded", "true")
+
     @container.addClass "chosen-with-drop"
     @results_showing = true
 
@@ -254,6 +261,7 @@ class Chosen extends AbstractChosen
     if @results_showing
       this.result_clear_highlight()
 
+      @search_field.attr("aria-expanded", "false")
       @container.removeClass "chosen-with-drop"
       @form_field_jq.trigger("chosen:hiding_dropdown", {chosen: this})
 
@@ -400,7 +408,7 @@ class Chosen extends AbstractChosen
 
   single_deselect_control_build: ->
     return unless @allow_single_deselect
-    @selected_item.find("span").first().after "<abbr class=\"search-choice-close\"></abbr>" unless @selected_item.find("abbr").length
+    @selected_item.find("span").first().after "<a href='#' class=\"search-choice-close\"></a>" unless @selected_item.find("abbr").length
     @selected_item.addClass("chosen-single-with-deselect")
 
   get_search_text: ->

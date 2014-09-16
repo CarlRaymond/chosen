@@ -89,6 +89,7 @@ class AbstractChosen
     option_el.setAttribute("data-option-array-index", option.array_index)
     option_el.innerHTML = option.search_text
     option_el.setAttribute('id', option.id)
+    option_el.setAttribute('role', 'option')
 
     labels = option.id
     if option.group_array_index
