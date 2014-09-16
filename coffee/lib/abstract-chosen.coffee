@@ -88,6 +88,13 @@ class AbstractChosen
     option_el.style.cssText = option.style
     option_el.setAttribute("data-option-array-index", option.array_index)
     option_el.innerHTML = option.search_text
+    option_el.setAttribute('id', option.id)
+
+    labels = option.id
+    if option.group_array_index
+      group = @results_data[option.group_array_index]
+      labels += ' ' + group.id
+    option_el.setAttribute('aria-labelledby', labels)
 
     this.outerHTML(option_el)
 
@@ -98,6 +105,7 @@ class AbstractChosen
     group_el = document.createElement("li")
     group_el.className = "group-result"
     group_el.innerHTML = group.search_text
+    group_el.setAttribute('id', group.id)
 
     this.outerHTML(group_el)
 

@@ -18,6 +18,7 @@ class SelectParser
       label: this.escapeExpression(group.label)
       children: 0
       disabled: group.disabled
+      id: @id_prefix + '-group' + group_position
     this.add_option( option, group_position, group.disabled ) for option in group.childNodes
 
   add_option: (option, group_position, group_disabled) ->
@@ -36,6 +37,7 @@ class SelectParser
           group_array_index: group_position
           classes: option.className
           style: option.style.cssText
+          id: @id_prefix + '-opt' + @options_index
       else
         @parsed.push
           array_index: @parsed.length
@@ -60,5 +62,6 @@ class SelectParser
 
 SelectParser.select_to_array = (select) ->
   parser = new SelectParser()
+  parser.id_prefix = select.id
   parser.add_node( child ) for child in select.childNodes
   parser.parsed

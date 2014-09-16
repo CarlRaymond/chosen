@@ -34,15 +34,18 @@ class Chosen extends AbstractChosen
       'class': container_classes.join ' '
       'style': "width: #{this.container_width()};"
       'title': @form_field.title
+      'role': 'application'
 
     container_props.id = @form_field.id.replace(/[^\w]/g, '_') + "_chosen" if @form_field.id.length
 
     @container = ($ "<div />", container_props)
 
+    results_id = @form_field.id + '-results'
+    labelledby = @form_field_jq.attr('aria-labelledby')
     if @is_multiple
-      @container.html '<ul class="chosen-choices"><li class="search-field"><input type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" /></li></ul><div class="chosen-drop"><ul class="chosen-results"></ul></div>'
+      @container.html '<ul class="chosen-choices"><li class="search-field"><input type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + '" aria-labelledby="' + labelledby + '"/></li></ul><div class="chosen-drop"><ul id="' + results_id + 'class="chosen-results"></ul></div>'
     else
-      @container.html '<a class="chosen-single chosen-default" tabindex="-1"><span>' + @default_text + '</span><div><b></b></div></a><div class="chosen-drop"><div class="chosen-search"><input type="text" autocomplete="off" /></div><ul class="chosen-results"></ul></div>'
+      @container.html '<a class="chosen-single chosen-default" tabindex="-1"><span>' + @default_text + '</span><div><b></b></div></a><div class="chosen-drop"><div class="chosen-search"><input type="text" autocomplete="off" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + '" aria-labelledby="' + labelledby + '" /></div><ul id="' + results_id + '" class="chosen-results"></ul></div>'
 
     @form_field_jq.hide().after @container
     @dropdown = @container.find('div.chosen-drop').first()
@@ -209,6 +212,9 @@ class Chosen extends AbstractChosen
       @result_highlight = el
       @result_highlight.addClass "highlighted"
 
+      # TODO: set aria-activedescendant in input box to element's id
+      @search_field.attr('aria-activedescendant', el.attr('id'))
+
       maxHeight = parseInt @search_results.css("maxHeight"), 10
       visible_top = @search_results.scrollTop()
       visible_bottom = maxHeight + visible_top
@@ -222,6 +228,8 @@ class Chosen extends AbstractChosen
         @search_results.scrollTop high_top
 
   result_clear_highlight: ->
+    # TODO: remove aria-activedescendant from input box
+    #@search_field.removeAttr('aria-activedescendant')
     @result_highlight.removeClass "highlighted" if @result_highlight
     @result_highlight = null
 
