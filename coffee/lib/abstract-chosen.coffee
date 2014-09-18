@@ -29,7 +29,8 @@ class AbstractChosen
     @inherit_select_classes = @options.inherit_select_classes || false
     @display_selected_options = if @options.display_selected_options? then @options.display_selected_options else true
     @display_disabled_options = if @options.display_disabled_options? then @options.display_disabled_options else true
-
+    @remove_label = "Remove"
+    
   set_default_text: ->
     if @form_field.getAttribute("data-placeholder")
       @default_text = @form_field.getAttribute("data-placeholder")
@@ -92,10 +93,13 @@ class AbstractChosen
     option_el.setAttribute('role', 'option')
 
     labels = option.id
+    labeltext = option.text
     if option.group_array_index
       group = @results_data[option.group_array_index]
       labels += ' ' + group.id
-    option_el.setAttribute('aria-labelledby', labels)
+      labeltext += ', ' + group.label
+    #option_el.setAttribute('aria-labelledby', labels)
+    option_el.setAttribute('aria-label', labeltext)
 
     this.outerHTML(option_el)
 

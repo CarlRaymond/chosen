@@ -44,14 +44,15 @@ class Chosen extends AbstractChosen
     input_id = @form_field.id + '-chosen-input'
     results_id = @form_field.id + '-chosen-results'
     single_id = @form_field.id + '-chosen-single'
+    multiple_id = @form_field.id + '-chosen-multiple'
 
     # Transfer the aria-labelledby from the <select> to the generated <input>
     labelledby = @form_field_jq.attr('aria-labelledby')
 
     if @is_multiple
-      @container.html '<ul class="chosen-choices"><li class="search-field"><input id="' + input_id + '" type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + '" aria-labelledby="' + labelledby + '"/></li></ul><div class="chosen-drop"><ul id="' + results_id + '" class="chosen-results"></ul></div>'
+      @container.html '<ul id="' + multiple_id + '" class="chosen-choices"><li class="search-field"><input id="' + input_id + '" type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + ' ' + multiple_id + '" aria-labelledby="' + labelledby + '"/></li></ul><div class="chosen-drop"><ul id="' + results_id + '" class="chosen-results"></ul></div>'
     else
-      @container.html '<a id="' + single_id + '" class="chosen-single chosen-default" tabindex="-1"><span>' + @default_text + '</span><div><b></b></div></a><div class="chosen-drop"><div class="chosen-search"><input id="' + input_id + '" type="text" autocomplete="off" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + '" aria-labelledby="' + labelledby + '" /></div><ul id="' + results_id + '" class="chosen-results"></ul></div>'
+      @container.html '<a id="' + single_id + '" role="option" class="chosen-single chosen-default" tabindex="-1"><span>' + @default_text + '</span><div><b></b></div></a><div class="chosen-drop"><div class="chosen-search"><input id="' + input_id + '" type="text" autocomplete="off" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + ' ' + single_id + '" aria-activedescendant="' + single_id + '" aria-labelledby="' + labelledby + '" /></div><ul id="' + results_id + '" class="chosen-results"></ul></div>'
 
     @form_field_jq.hide().after @container
     @dropdown = @container.find('div.chosen-drop').first()
@@ -213,11 +214,12 @@ class Chosen extends AbstractChosen
 
   result_do_highlight: (el) ->
     if el.length
+      #@result_highlight.attr('aria-selected', 'false') if @result_highlight
       this.result_clear_highlight()
 
       @result_highlight = el
       @result_highlight.addClass "highlighted"
-
+      #@result_highlight.attr('aria-selected', 'true')
       @search_field.attr('aria-activedescendant', el.attr('id'))
 
       maxHeight = parseInt @search_results.css("maxHeight"), 10
@@ -233,8 +235,6 @@ class Chosen extends AbstractChosen
         @search_results.scrollTop high_top
 
   result_clear_highlight: ->
-    # TODO: remove aria-activedescendant from input box
-    #@search_field.removeAttr('aria-activedescendant')
     @result_highlight.removeClass "highlighted" if @result_highlight
     @result_highlight = null
 
@@ -243,6 +243,7 @@ class Chosen extends AbstractChosen
       @form_field_jq.trigger("chosen:maxselected", {chosen: this})
       return false
 
+    #@selected_item.attr('aria-selected', false) if @selected_item
     @search_field.attr("aria-expanded", "true")
 
     @container.addClass "chosen-with-drop"
@@ -261,6 +262,8 @@ class Chosen extends AbstractChosen
     if @results_showing
       this.result_clear_highlight()
 
+      @selected_item.attr('aria-selected', 'true') if @selected_item
+      @search_field.attr("aria-activedescendant", @selected_item.attr('id')) if @selected_item
       @search_field.attr("aria-expanded", "false")
       @container.removeClass "chosen-with-drop"
       @form_field_jq.trigger("chosen:hiding_dropdown", {chosen: this})
@@ -305,7 +308,7 @@ class Chosen extends AbstractChosen
     this.result_clear_highlight() if $(evt.target).hasClass "active-result" or $(evt.target).parents('.active-result').first()
 
   choice_build: (item) ->
-    choice = $('<li />', { class: "search-choice" }).html("<span>#{item.html}</span>")
+    choice = $('<li />', { class: "search-choice", role: "option", "aria-selected": "true" }).html("<span>#{item.html}</span>")
 
     if item.disabled
       choice.addClass 'search-choice-disabled'
@@ -381,9 +384,11 @@ class Chosen extends AbstractChosen
   single_set_selected_text: (text=@default_text) ->
     if text is @default_text
       @selected_item.addClass("chosen-default")
+      @selected_item.attr('aria-selected', 'false')
     else
       this.single_deselect_control_build()
       @selected_item.removeClass("chosen-default")
+      @selected_item.attr('aria-selected', 'true')
 
     @selected_item.find("span").text(text)
 
@@ -408,7 +413,7 @@ class Chosen extends AbstractChosen
 
   single_deselect_control_build: ->
     return unless @allow_single_deselect
-    @selected_item.find("span").first().after "<a href='#' class=\"search-choice-close\"></a>" unless @selected_item.find("abbr").length
+    @selected_item.find("span").first().after "<abbr role=\"button\" aria-label=\"" + @remove_label + "\" class=\"search-choice-close\"></a>" unless @selected_item.find("abbr").length
     @selected_item.addClass("chosen-single-with-deselect")
 
   get_search_text: ->
@@ -421,10 +426,13 @@ class Chosen extends AbstractChosen
     this.result_do_highlight do_high if do_high?
 
   no_results: (terms) ->
-    no_results_html = $('<li class="no-results">' + @results_none_found + ' "<span></span>"</li>')
+    no_results_id = @form_field.id + '-no-results'
+    no_results_html = $('<li id="' + no_results_id + '" class="no-results" role="option" aria-selected="false">' + @results_none_found + ' "<span></span>"</li>')
     no_results_html.find("span").first().html(terms)
 
     @search_results.append no_results_html
+    @search_field.attr('aria-activedescendant', no_results_id)
+
     @form_field_jq.trigger("chosen:no_results", {chosen:this})
 
   no_results_clear: ->
