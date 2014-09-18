@@ -50,9 +50,9 @@ class Chosen extends AbstractChosen
     labelledby = @form_field_jq.attr('aria-labelledby')
 
     if @is_multiple
-      @container.html '<ul id="' + multiple_id + '" class="chosen-choices"><li class="search-field"><input id="' + input_id + '" type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + ' ' + multiple_id + '" aria-labelledby="' + labelledby + '"/></li></ul><div class="chosen-drop"><ul id="' + results_id + '" class="chosen-results"></ul></div>'
+      @container.html '<ul id="' + multiple_id + '" class="chosen-choices" role="listbox"><li class="search-field"><input id="' + input_id + '" type="text" value="' + @default_text + '" class="default" autocomplete="off" style="width:25px;" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + ' ' + multiple_id + '" aria-labelledby="' + labelledby + '"/></li></ul><div class="chosen-drop"><ul id="' + results_id + '" class="chosen-results"></ul></div>'
     else
-      @container.html '<a id="' + single_id + '" role="option" class="chosen-single chosen-default" tabindex="-1"><span>' + @default_text + '</span><div><b></b></div></a><div class="chosen-drop"><div class="chosen-search"><input id="' + input_id + '" type="text" autocomplete="off" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + ' ' + single_id + '" aria-activedescendant="' + single_id + '" aria-labelledby="' + labelledby + '" /></div><ul id="' + results_id + '" class="chosen-results"></ul></div>'
+      @container.html '<a id="' + single_id + '" role="option" class="chosen-single chosen-default" tabindex="-1"><span>' + @default_text + '</span><div><b></b></div></a><div class="chosen-drop"><div class="chosen-search"><input id="' + input_id + '" type="text" autocomplete="off" aria-autocomplete="list" role="combobox" aria-owns="' + results_id + ' ' + single_id + '" aria-activedescendant="' + single_id + '" aria-labelledby="' + labelledby + '" /></div><ul id="' + results_id + '" class="chosen-results" role="listbox"></ul></div>'
 
     @form_field_jq.hide().after @container
     @dropdown = @container.find('div.chosen-drop').first()
@@ -308,12 +308,13 @@ class Chosen extends AbstractChosen
     this.result_clear_highlight() if $(evt.target).hasClass "active-result" or $(evt.target).parents('.active-result').first()
 
   choice_build: (item) ->
-    choice = $('<li />', { class: "search-choice", role: "option", "aria-selected": "true" }).html("<span>#{item.html}</span>")
+    itemlabel = item.id + '-selected'
+    choice = $('<li />', { class: "search-choice", id: itemlabel, tabindex: "0", role: "option", "aria-selected": "true" }).html("<span>#{item.html}</span>")
 
     if item.disabled
       choice.addClass 'search-choice-disabled'
     else
-      close_link = $('<a />', { class: 'search-choice-close', 'data-option-array-index': item.array_index })
+      close_link = $('<a />', { class: 'search-choice-close', href: '#', 'data-option-array-index': item.array_index, 'aria-labelledby': itemlabel })
       close_link.bind 'click.chosen', (evt) => this.choice_destroy_link_click(evt)
       choice.append close_link
 
